@@ -7,7 +7,7 @@ let roomCode = null;
 let playerId = null;
 let gameState = null;
 
-const shoppingCart = { lemons: 0, sugar: 0, ice: 0, cups: 0, baristas: 0 };
+const shoppingCart = { lemons: 0, sugar: 0, ice: 0, cups: 0 };
 const recipe = { lemons: 4, sugar: 4, ice: 4 };
 let prepareJugs = 0;
 let pricePerCup = 2.00;
@@ -216,7 +216,6 @@ function initTurnUI() {
   document.getElementById('buy-sugar').value = 0;
   document.getElementById('buy-ice').value = 0;
   document.getElementById('buy-cups').value = 0;
-  document.getElementById('buy-baristas').value = 0;
   inputPrepareJugs.value = 0;
   const prepareJugsVal = document.getElementById('prepare-jugs-val');
   if (prepareJugsVal) prepareJugsVal.innerText = 0;
@@ -396,8 +395,7 @@ function calculateCartCost() {
     shoppingCart.lemons * gameState.prices.lemons +
     shoppingCart.sugar * gameState.prices.sugar +
     shoppingCart.ice * gameState.prices.ice +
-    shoppingCart.cups * gameState.prices.cups +
-    (shoppingCart.baristas || 0) * 15.0
+    shoppingCart.cups * gameState.prices.cups
   );
 }
 
@@ -607,8 +605,7 @@ function showLedgerOverlay() {
       { name: 'Lemons', qty: res.purchasesDetail.lemons, unitPrice: gameState.prices.lemons },
       { name: 'Sugar', qty: res.purchasesDetail.sugar, unitPrice: gameState.prices.sugar },
       { name: 'Ice', qty: res.purchasesDetail.ice, unitPrice: gameState.prices.ice },
-      { name: 'Cups', qty: res.purchasesDetail.cups, unitPrice: gameState.prices.cups },
-      { name: 'Baristas (Staff)', qty: res.purchasesDetail.baristas || 0, unitPrice: 15.0 }
+      { name: 'Cups', qty: res.purchasesDetail.cups, unitPrice: gameState.prices.cups }
     ];
     items.forEach(it => {
       if (it.qty > 0) {
@@ -625,11 +622,6 @@ function showLedgerOverlay() {
     invCupsRatio.innerText = `${res.cupsSold}/${res.cupsPrepared}`;
     invRevenueCash.innerText = `+$${res.revenue.toFixed(2)}`;
     invRentCost.innerText = `-$${res.rentDeducted.toFixed(2)}`;
-    
-    const invBaristaWages = document.getElementById('inv-barista-wages');
-    if (invBaristaWages) {
-      invBaristaWages.innerText = `-$${(res.baristasWage || 0).toFixed(2)}`;
-    }
 
     invRottedCount.innerText = res.spoilageLemons;
     invMeltedCount.innerText = res.spoilageIce;
@@ -753,7 +745,7 @@ document.querySelectorAll('.btn-minus, .btn-plus').forEach(btn => {
 });
 
 // Direct typing input bindings for shopping cart
-['lemons', 'sugar', 'ice', 'cups', 'baristas'].forEach(item => {
+['lemons', 'sugar', 'ice', 'cups'].forEach(item => {
   const input = document.getElementById(`buy-${item}`);
   if (input) {
     input.addEventListener('input', () => {

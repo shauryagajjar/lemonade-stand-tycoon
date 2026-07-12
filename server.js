@@ -261,8 +261,7 @@ function runSimulation(room) {
     const sugarCost = dec.purchases.sugar * room.prices.sugar;
     const iceCost = dec.purchases.ice * room.prices.ice;
     const cupsCost = dec.purchases.cups * room.prices.cups;
-    const baristasCost = (dec.purchases.baristas || 0) * 15.0; // Hired baristas monthly wage
-    const totalPurchasesCost = lemonsCost + sugarCost + iceCost + cupsCost + baristasCost;
+    const totalPurchasesCost = lemonsCost + sugarCost + iceCost + cupsCost;
 
     // Apply purchases to inventory & cash
     player.cash = parseFloat((player.cash - totalPurchasesCost).toFixed(2));
@@ -321,16 +320,17 @@ function runSimulation(room) {
     const cupsPrepared = dec.jugs * 10;
     const quality = calculateQuality(dec.recipe);
 
-    // Competitive attraction score: A_i = Quality * e^(-Price / 1.5)
+    // Perceived Value Index: Value = Price / (Quality / 60)
+    // Low value score represents high value-for-money. E.g. $1.00 cup @ 100 quality is perceived as $0.60 price.
+    // If quality is 0, customers refuse to buy!
+    const valueScore = quality > 0 ? parseFloat((dec.price / (quality / 60)).toFixed(4)) : 9999;
+
     let attraction = 0;
-    if (cupsPrepared > 0 && dec.price > 0) {
+    if (cupsPrepared > 0 && dec.price > 0 && quality > 0) {
       attraction = quality * Math.exp(-dec.price / 1.5);
       if (!player.isBot) {
         attraction *= 1.2; // 20% human player attraction advantage
       }
-      // Hired baristas increase customer attraction
-      const baristasCount = dec.purchases.baristas || 0;
-      attraction += baristasCount * 15;
     }
 
     simulationResults[player.id] = {
@@ -344,6 +344,7 @@ function runSimulation(room) {
       price: dec.price,
       quality,
       attraction,
+      valueScore,
       cupsPrepared,
       cupsSold: 0,
       revenue: 0,
@@ -353,8 +354,6 @@ function runSimulation(room) {
       profit: 0,
       finalCash: 0,
       bankrupt: false,
-      baristas: dec.purchases.baristas || 0,
-      baristasWage: baristasCost,
       upgrades: player.upgrades ? { ...player.upgrades } : { refrigerator: false, juicer: false }
     };
   });
@@ -368,24 +367,27 @@ function runSimulation(room) {
     totalCustomers = Math.floor(totalCustomers * Math.max(0.2, Math.min(2.0, priceSensitivity)));
   }
 
-  // 3. Competitive Demand Distribution Loop (Sequential Pricing-Based Matching)
+  // 3. Competitive Demand Distribution Loop (Sequential Perceived Value Matching)
   let remainingCustomers = totalCustomers;
   const standIds = activePlayers.filter(p => simulationResults[p.id].cupsPrepared > 0).map(p => p.id);
   
-  // Sort stands: cheapest price first, highest quality second (in case of a price tie)
+  // Sort stands: lowest Perceived Value score first (meaning best quality for price), highest quality second
   standIds.sort((a, b) => {
     const resA = simulationResults[a];
     const resB = simulationResults[b];
-    if (resA.price !== resB.price) {
-      return resA.price - resB.price;
+    if (resA.valueScore !== resB.valueScore) {
+      return resA.valueScore - resB.valueScore;
     }
     return resB.quality - resA.quality;
   });
 
-  // Distribute customers sequentially to cheapest stands first
+  // Distribute customers sequentially to best value stands first
   standIds.forEach(pid => {
     if (remainingCustomers <= 0) return;
     const res = simulationResults[pid];
+    // Reject swamp water completely
+    if (res.quality <= 0) return;
+
     const capacity = res.cupsPrepared;
     const actualSold = Math.min(remainingCustomers, capacity);
     
@@ -587,8 +589,7 @@ io.on('connection', (socket) => {
       decision.purchases.lemons * room.prices.lemons +
       decision.purchases.sugar * room.prices.sugar +
       decision.purchases.ice * room.prices.ice +
-      decision.purchases.cups * room.prices.cups +
-      (decision.purchases.baristas || 0) * 15.0; // Hired baristas monthly wage
+      decision.purchases.cups * room.prices.cups;
 
     if (purchasesCost > 0 && purchasesCost > player.cash) {
       socket.emit('errorMsg', 'Insufficient funds for purchases.');
