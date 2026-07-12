@@ -7,7 +7,7 @@ let roomCode = null;
 let playerId = null;
 let gameState = null;
 
-const shoppingCart = { lemons: 0, sugar: 0, ice: 0, cups: 0 };
+const shoppingCart = { lemons: 0, sugar: 0, ice: 0, cups: 0, baristas: 0 };
 const recipe = { lemons: 4, sugar: 4, ice: 4 };
 let prepareJugs = 0;
 let pricePerCup = 2.00;
@@ -140,6 +140,16 @@ socket.on('gameStarted', (state) => {
   roomCode = state.code;
   switchScreen(screenGameplay);
   initTurnUI();
+
+  // Reset navigation state to dashboard tab
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(nav => {
+    if (nav.getAttribute('data-tab') === 'tab-dashboard') {
+      nav.classList.add('active');
+    } else {
+      nav.classList.remove('active');
+    }
+  });
+  switchTab('tab-dashboard');
 });
 
 socket.on('playerReadyStatus', ({ readyPlayers }) => {
@@ -206,6 +216,7 @@ function initTurnUI() {
   document.getElementById('buy-sugar').value = 0;
   document.getElementById('buy-ice').value = 0;
   document.getElementById('buy-cups').value = 0;
+  document.getElementById('buy-baristas').value = 0;
   inputPrepareJugs.value = 0;
   const prepareJugsVal = document.getElementById('prepare-jugs-val');
   if (prepareJugsVal) prepareJugsVal.innerText = 0;
@@ -217,7 +228,7 @@ function initTurnUI() {
   priceCups.innerText = `$${gameState.prices.cups.toFixed(2)}`;
 
   if (displayRentDue) {
-    const rentAmount = gameState.currentEvent.id === 'street_fair' ? 50 : 25;
+    const rentAmount = gameState.currentEvent.id === 'street_fair' ? 80 : 40;
     displayRentDue.innerText = `$${rentAmount.toFixed(2)}`;
   }
   
@@ -237,14 +248,14 @@ function initTurnUI() {
     disableAllInputs();
     btnSubmitTurn.style.display = 'block';
     btnSubmitTurn.disabled = false;
-    btnSubmitTurn.innerText = 'WATCH BOTS / NEXT MONTH';
-    btnSubmitTurn.style.backgroundColor = 'var(--brutal-white)';
-    btnSubmitTurn.style.color = 'var(--text-dark)';
+    btnSubmitTurn.innerText = 'Spectate Next Month';
+    btnSubmitTurn.style.backgroundColor = '#EAE1D4';
+    btnSubmitTurn.style.color = '#8E7660';
     readyWaitingIndicator.classList.add('hidden');
   } else {
-    btnSubmitTurn.innerText = 'READY & SUBMIT TURN';
-    btnSubmitTurn.style.backgroundColor = 'var(--brutal-magenta)';
-    btnSubmitTurn.style.color = 'var(--text-light)';
+    btnSubmitTurn.innerText = 'Lock In Month';
+    btnSubmitTurn.style.backgroundColor = 'var(--btn-terracotta)';
+    btnSubmitTurn.style.color = 'var(--white)';
   }
 }
 
@@ -285,6 +296,32 @@ function updateFinancesUI() {
   if (!me) return;
 
   displayCash.innerText = `$${me.cash.toFixed(2)}`;
+
+  // Update upgrades button status
+  const btnUpgradeRefrigerator = document.getElementById('btn-upgrade-refrigerator');
+  const btnUpgradeJuicer = document.getElementById('btn-upgrade-juicer');
+
+  if (me.upgrades) {
+    if (me.upgrades.refrigerator) {
+      btnUpgradeRefrigerator.innerText = 'Owned';
+      btnUpgradeRefrigerator.classList.add('owned');
+      btnUpgradeRefrigerator.disabled = true;
+    } else {
+      btnUpgradeRefrigerator.innerText = 'Buy';
+      btnUpgradeRefrigerator.classList.remove('owned');
+      btnUpgradeRefrigerator.disabled = me.cash < 50.0;
+    }
+
+    if (me.upgrades.juicer) {
+      btnUpgradeJuicer.innerText = 'Owned';
+      btnUpgradeJuicer.classList.add('owned');
+      btnUpgradeJuicer.disabled = true;
+    } else {
+      btnUpgradeJuicer.innerText = 'Buy';
+      btnUpgradeJuicer.classList.remove('owned');
+      btnUpgradeJuicer.disabled = me.cash < 40.0;
+    }
+  }
 
   // Inventory
   const freshLemons = me.inventory.lemons[0].qty;
@@ -359,7 +396,8 @@ function calculateCartCost() {
     shoppingCart.lemons * gameState.prices.lemons +
     shoppingCart.sugar * gameState.prices.sugar +
     shoppingCart.ice * gameState.prices.ice +
-    shoppingCart.cups * gameState.prices.cups
+    shoppingCart.cups * gameState.prices.cups +
+    (shoppingCart.baristas || 0) * 15.0
   );
 }
 
@@ -569,7 +607,8 @@ function showLedgerOverlay() {
       { name: 'Lemons', qty: res.purchasesDetail.lemons, unitPrice: gameState.prices.lemons },
       { name: 'Sugar', qty: res.purchasesDetail.sugar, unitPrice: gameState.prices.sugar },
       { name: 'Ice', qty: res.purchasesDetail.ice, unitPrice: gameState.prices.ice },
-      { name: 'Cups', qty: res.purchasesDetail.cups, unitPrice: gameState.prices.cups }
+      { name: 'Cups', qty: res.purchasesDetail.cups, unitPrice: gameState.prices.cups },
+      { name: 'Baristas (Staff)', qty: res.purchasesDetail.baristas || 0, unitPrice: 15.0 }
     ];
     items.forEach(it => {
       if (it.qty > 0) {
@@ -586,6 +625,12 @@ function showLedgerOverlay() {
     invCupsRatio.innerText = `${res.cupsSold}/${res.cupsPrepared}`;
     invRevenueCash.innerText = `+$${res.revenue.toFixed(2)}`;
     invRentCost.innerText = `-$${res.rentDeducted.toFixed(2)}`;
+    
+    const invBaristaWages = document.getElementById('inv-barista-wages');
+    if (invBaristaWages) {
+      invBaristaWages.innerText = `-$${(res.baristasWage || 0).toFixed(2)}`;
+    }
+
     invRottedCount.innerText = res.spoilageLemons;
     invMeltedCount.innerText = res.spoilageIce;
     
@@ -708,7 +753,7 @@ document.querySelectorAll('.btn-minus, .btn-plus').forEach(btn => {
 });
 
 // Direct typing input bindings for shopping cart
-['lemons', 'sugar', 'ice', 'cups'].forEach(item => {
+['lemons', 'sugar', 'ice', 'cups', 'baristas'].forEach(item => {
   const input = document.getElementById(`buy-${item}`);
   if (input) {
     input.addEventListener('input', () => {
@@ -819,26 +864,77 @@ btnPlayAgain.addEventListener('click', () => {
 switchScreen(screenLobby);
 updateRecipeQuality();
 
+// Tab Switching Panel visibility toggle
+function switchTab(tabId) {
+  const panels = [
+    document.querySelector('.ledger-cards-container'),
+    document.getElementById('card-recipe-pricing'),
+    document.getElementById('card-inventory'),
+    document.getElementById('card-upgrades'),
+    document.getElementById('card-market'),
+    document.getElementById('card-leaderboards')
+  ];
+  
+  panels.forEach(p => {
+    if (p) p.style.display = 'none';
+  });
+
+  if (tabId === 'tab-dashboard') {
+    const cardsContainer = document.querySelector('.ledger-cards-container');
+    if (cardsContainer) cardsContainer.style.display = 'grid';
+    const recipePricing = document.getElementById('card-recipe-pricing');
+    if (recipePricing) recipePricing.style.display = 'block';
+  } else if (tabId === 'tab-inventory') {
+    const inventoryCard = document.getElementById('card-inventory');
+    if (inventoryCard) inventoryCard.style.display = 'block';
+    const upgradesCard = document.getElementById('card-upgrades');
+    if (upgradesCard) upgradesCard.style.display = 'block';
+  } else if (tabId === 'tab-market') {
+    const marketCard = document.getElementById('card-market');
+    if (marketCard) marketCard.style.display = 'block';
+  } else if (tabId === 'tab-leaderboard') {
+    const leaderboardsCard = document.getElementById('card-leaderboards');
+    if (leaderboardsCard) leaderboardsCard.style.display = 'block';
+  }
+}
+
 // Sidebar tabs navigation
 document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
   item.addEventListener('click', () => {
     document.querySelectorAll('.sidebar-nav .nav-item').forEach(nav => nav.classList.remove('active'));
     item.classList.add('active');
     
-    const targetId = item.getAttribute('data-target');
-    const targetEl = document.getElementById(targetId);
-    if (targetEl) {
-      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else if (targetId === 'screen-gameplay') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    const tabId = item.getAttribute('data-tab');
+    if (tabId) {
+      switchTab(tabId);
     }
   });
 });
+
+// Window Upgrade triggers
+window.buyUpgrade = function(upgradeType) {
+  if (!roomCode) return;
+  socket.emit('buyUpgrade', { roomCode, upgradeType });
+};
 
 // Monthly report shortcut button
 const btnLedgerOpenShortcut = document.getElementById('btn-ledger-open-shortcut');
 if (btnLedgerOpenShortcut) {
   btnLedgerOpenShortcut.addEventListener('click', () => {
     showLedgerOverlay();
+  });
+}
+
+// Upgrade click event listeners
+const btnUpgradeFridge = document.getElementById('btn-upgrade-refrigerator');
+if (btnUpgradeFridge) {
+  btnUpgradeFridge.addEventListener('click', () => {
+    if (roomCode) socket.emit('buyUpgrade', { roomCode, upgradeType: 'refrigerator' });
+  });
+}
+const btnUpgradeJuice = document.getElementById('btn-upgrade-juicer');
+if (btnUpgradeJuice) {
+  btnUpgradeJuice.addEventListener('click', () => {
+    if (roomCode) socket.emit('buyUpgrade', { roomCode, upgradeType: 'juicer' });
   });
 }

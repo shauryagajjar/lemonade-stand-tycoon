@@ -1505,3 +1505,96 @@ body {
     gap: 1rem;
   }
 }
+
+/* Stand Upgrades Layout */
+.upgrades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upgrade-row {
+  background-color: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upgrade-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.upgrade-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.upgrade-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-upgrade-buy {
+  background-color: var(--btn-terracotta);
+  color: var(--white);
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.45rem 1.25rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(222, 95, 61, 0.15);
+  transition: all var(--transition-speed);
+}
+
+.btn-upgrade-buy:hover:not(:disabled) {
+  background-color: var(--btn-terracotta-hover);
+  transform: translateY(-1px);
+}
+
+.btn-upgrade-buy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-upgrade-buy.owned {
+  background-color: rgba(42, 157, 143, 0.12) !important;
+  color: var(--success) !important;
+  border: 1px solid rgba(42, 157, 143, 0.2) !important;
+  cursor: default !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* UI Readability and Inputs Sizing Overrides */
+.form-group-clean input[type="text"],
+.form-group-clean input[type="number"],
+.param-input-box input[type="number"],
+.price-input-wrapper input[type="number"] {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  padding: 0.5rem;
+}
+
+/* Center and Highlight Values in Parameters Grid */
+.param-input-box {
+  align-items: center;
+}
+
+/* Barista Row Circle Colors */
+.market-list-row:nth-child(5) .item-circle {
+  background-color: #E6FFFA;
+}
+

@@ -53,10 +53,10 @@ function getSafeRoomCode(roomCode) {
 
 // Generate base market prices based on event
 function generateMarketPrices(event) {
-  let lemonPrice = parseFloat((Math.random() * 0.20 + 0.05).toFixed(2)); // 0.05 to 0.25
-  let sugarPrice = parseFloat((Math.random() * 0.08 + 0.02).toFixed(2)); // 0.02 to 0.10
-  let icePrice = parseFloat((Math.random() * 0.04 + 0.01).toFixed(2));   // 0.01 to 0.05
-  const cupPrice = 0.05;
+  let lemonPrice = parseFloat((Math.random() * 0.40 + 0.20).toFixed(2)); // 0.20 to 0.60
+  let sugarPrice = parseFloat((Math.random() * 0.20 + 0.10).toFixed(2)); // 0.10 to 0.30
+  let icePrice = parseFloat((Math.random() * 0.10 + 0.05).toFixed(2));   // 0.05 to 0.15
+  const cupPrice = 0.08;
 
   if (event.id === 'infestation') {
     lemonPrice = parseFloat((lemonPrice * 3).toFixed(2));
@@ -112,7 +112,7 @@ function initRoom(code) {
     players: {},
     turn: 1,
     maxTurns: 12,
-    rent: 25,
+    rent: 40,
     currentWeather: 'SUNNY',
     currentEvent: EVENTS[0],
     prices: generateMarketPrices(EVENTS[0]),
@@ -261,7 +261,8 @@ function runSimulation(room) {
     const sugarCost = dec.purchases.sugar * room.prices.sugar;
     const iceCost = dec.purchases.ice * room.prices.ice;
     const cupsCost = dec.purchases.cups * room.prices.cups;
-    const totalPurchasesCost = lemonsCost + sugarCost + iceCost + cupsCost;
+    const baristasCost = (dec.purchases.baristas || 0) * 15.0; // Hired baristas monthly wage
+    const totalPurchasesCost = lemonsCost + sugarCost + iceCost + cupsCost + baristasCost;
 
     // Apply purchases to inventory & cash
     player.cash = parseFloat((player.cash - totalPurchasesCost).toFixed(2));
@@ -270,8 +271,13 @@ function runSimulation(room) {
     player.inventory.cups += dec.purchases.cups;
     player.inventory.lemons[0].qty += dec.purchases.lemons; // new lemons start at age 0
 
-    // 2. Prepare Jugs (Use oldest lemons first)
-    const lemonsNeeded = dec.jugs * dec.recipe.lemons;
+    // 2. Prepare Jugs (Use oldest lemons first, juicer saves lemons!)
+    let lemonsNeeded = dec.jugs * dec.recipe.lemons;
+    if (player.upgrades && player.upgrades.juicer && dec.jugs > 0) {
+      // Lemon Presser upgrade saves 1 lemon per jug (min 1)
+      const effectiveLemonsPerJug = Math.max(1, dec.recipe.lemons - 1);
+      lemonsNeeded = dec.jugs * effectiveLemonsPerJug;
+    }
     const sugarNeeded = dec.jugs * dec.recipe.sugar;
     const iceNeeded = dec.jugs * dec.recipe.ice;
     const cupsNeeded = dec.jugs * 10;
@@ -316,14 +322,15 @@ function runSimulation(room) {
     const quality = calculateQuality(dec.recipe);
 
     // Competitive attraction score: A_i = Quality * e^(-Price / 1.5)
-    // Scale price factor so higher price drops attraction smoothly.
     let attraction = 0;
     if (cupsPrepared > 0 && dec.price > 0) {
-      // Scale: a $2.00 price gives standard exponential decay. Let's make it highly sensitive.
       attraction = quality * Math.exp(-dec.price / 1.5);
       if (!player.isBot) {
         attraction *= 1.2; // 20% human player attraction advantage
       }
+      // Hired baristas increase customer attraction
+      const baristasCount = dec.purchases.baristas || 0;
+      attraction += baristasCount * 15;
     }
 
     simulationResults[player.id] = {
@@ -342,10 +349,13 @@ function runSimulation(room) {
       revenue: 0,
       spoilageLemons: 0,
       spoilageIce: 0,
-      rentDeducted: room.currentEvent.id === 'street_fair' ? 50 : 25,
+      rentDeducted: room.currentEvent.id === 'street_fair' ? 80 : 40,
       profit: 0,
       finalCash: 0,
-      bankrupt: false
+      bankrupt: false,
+      baristas: dec.purchases.baristas || 0,
+      baristasWage: baristasCost,
+      upgrades: player.upgrades ? { ...player.upgrades } : { refrigerator: false, juicer: false }
     };
   });
 
@@ -403,8 +413,16 @@ function runSimulation(room) {
     player.inventory.lemons[0].qty = 0;
 
     // Ice Melts
-    res.spoilageIce = player.inventory.ice;
-    player.inventory.ice = 0;
+    if (player.upgrades && player.upgrades.refrigerator) {
+      // Refrigerator keeps ice! Only 50% melts.
+      const remainingIce = player.inventory.ice;
+      const savedIce = Math.floor(remainingIce * 0.5);
+      res.spoilageIce = remainingIce - savedIce;
+      player.inventory.ice = savedIce;
+    } else {
+      res.spoilageIce = player.inventory.ice;
+      player.inventory.ice = 0;
+    }
 
     // Final Ledger
     res.profit = parseFloat((res.revenue - res.purchasesCost - res.rentDeducted).toFixed(2));
@@ -461,7 +479,8 @@ io.on('connection', (socket) => {
       status: 'playing', // 'playing' | 'bankrupt'
       ready: false,
       isBot: false,
-      decision: null
+      decision: null,
+      upgrades: { refrigerator: false, juicer: false }
     };
 
     rooms[code].players[socket.id] = newPlayer;
@@ -492,7 +511,8 @@ io.on('connection', (socket) => {
       status: 'playing',
       ready: false,
       isBot: false,
-      decision: null
+      decision: null,
+      upgrades: { refrigerator: false, juicer: false }
     };
 
     rooms[code].players[socket.id] = newPlayer;
@@ -541,7 +561,8 @@ io.on('connection', (socket) => {
         status: 'playing',
         ready: false,
         isBot: true,
-        decision: null
+        decision: null,
+        upgrades: { refrigerator: false, juicer: false }
       };
     }
 
@@ -566,7 +587,8 @@ io.on('connection', (socket) => {
       decision.purchases.lemons * room.prices.lemons +
       decision.purchases.sugar * room.prices.sugar +
       decision.purchases.ice * room.prices.ice +
-      decision.purchases.cups * room.prices.cups;
+      decision.purchases.cups * room.prices.cups +
+      (decision.purchases.baristas || 0) * 15.0; // Hired baristas monthly wage
 
     if (purchasesCost > 0 && purchasesCost > player.cash) {
       socket.emit('errorMsg', 'Insufficient funds for purchases.');
@@ -598,6 +620,23 @@ io.on('connection', (socket) => {
       io.to(code).emit('playerReadyStatus', {
         readyPlayers: Object.values(room.players).filter(p => p.ready).map(p => p.id)
       });
+    }
+  });
+
+  // Handle Upgrade Purchases
+  socket.on('buyUpgrade', ({ roomCode, upgradeType }) => {
+    const code = getSafeRoomCode(roomCode);
+    if (!code || !rooms[code]) return;
+    const room = rooms[code];
+    const player = room.players[socket.id];
+    if (!player || player.status !== 'playing') return;
+
+    const cost = upgradeType === 'refrigerator' ? 50.0 : 40.0;
+    if (player.cash >= cost && !player.upgrades[upgradeType]) {
+      player.cash = parseFloat((player.cash - cost).toFixed(2));
+      player.upgrades[upgradeType] = true;
+      io.to(code).emit('roomUpdated', room);
+      console.log(`User ${player.username} in room ${code} purchased upgrade: ${upgradeType}`);
     }
   });
 
