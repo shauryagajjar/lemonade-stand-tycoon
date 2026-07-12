@@ -1306,3 +1306,112 @@ body {
     padding-top: 0.5rem;
   }
 }
+
+/* Mobile Phone Portrait adjustments */
+@media (max-width: 480px) {
+  .main-container {
+    padding: 1rem 0.5rem;
+  }
+  .title-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+  .main-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+  .main-subtitle {
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  .btn-new-game {
+    width: 100%;
+    text-align: center;
+  }
+  .ledger-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .ledger-metric {
+    padding: 0.75rem;
+  }
+  .metric-value {
+    font-size: 1.2rem;
+  }
+  .market-list-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  .row-right {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .inventory-bubbles-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .inv-bubble {
+    padding: 0.5rem;
+  }
+  .bubble-emoji {
+    font-size: 1.2rem;
+  }
+  .bubble-desc strong {
+    font-size: 0.95rem;
+  }
+  .recipe-inputs-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+  .recipe-input-box label {
+    font-size: 0.65rem;
+  }
+  .recipe-input-box input {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.95rem;
+  }
+  .execution-inputs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  .form-group-clean label {
+    font-size: 0.65rem;
+  }
+  .form-group-clean input {
+    padding: 0.4rem;
+    font-size: 0.95rem;
+  }
+  .quality-progress-bar-container {
+    height: 8px;
+  }
+  .ledger-modal-card {
+    padding: 0.75rem;
+    max-height: 96vh;
+  }
+  .ledger-modal-header h2 {
+    font-size: 1.3rem;
+  }
+  .ledger-modal-weather {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  .ledger-modal-main {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .ledger-modal-table th, .ledger-modal-table td {
+    padding: 0.35rem;
+    font-size: 0.7rem;
+  }
+  .invoice-bill {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+}
+
