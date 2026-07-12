@@ -207,6 +207,8 @@ function initTurnUI() {
   document.getElementById('buy-ice').value = 0;
   document.getElementById('buy-cups').value = 0;
   inputPrepareJugs.value = 0;
+  const prepareJugsVal = document.getElementById('prepare-jugs-val');
+  if (prepareJugsVal) prepareJugsVal.innerText = 0;
   
   // Set prices from gameState
   priceLemon.innerText = `$${gameState.prices.lemons.toFixed(2)}`;
@@ -252,20 +254,30 @@ function disableAllInputs() {
 }
 
 function updateDashboardInfo() {
-  displayMonth.innerText = `${gameState.turn} / ${gameState.maxTurns}`;
+  const monthStr = `Month ${gameState.turn} of ${gameState.maxTurns}`;
+  if (displayMonth) {
+    displayMonth.innerText = monthStr;
+  }
+  const displayMonthBadge = document.getElementById('display-month-badge');
+  if (displayMonthBadge) {
+    displayMonthBadge.innerText = monthStr;
+  }
   displayWeather.innerText = gameState.currentWeather;
   
   // Weather Class
-  displayWeather.className = 'metric-value';
-  displayWeather.classList.add(`weather-${gameState.currentWeather.toLowerCase()}`);
+  displayWeather.className = 'dash-value';
   
   // Events
   displayEventBadge.innerText = gameState.currentEvent.name;
   displayEventDesc.innerText = gameState.currentEvent.desc;
   
-  eventCard.className = 'dashboard-metric metric-event';
-  if (gameState.currentEvent.type === 'negative') eventCard.classList.add('negative');
-  if (gameState.currentEvent.type === 'positive') eventCard.classList.add('positive');
+  eventCard.className = 'ledger-dash-card';
+  
+  // Update dynamic room status in sidebar
+  const lobbyActiveStatus = document.getElementById('lobby-active-status');
+  if (lobbyActiveStatus) {
+    lobbyActiveStatus.innerText = roomCode ? `Active: Room ${roomCode}` : 'Active: Lobby';
+  }
 }
 
 function updateFinancesUI() {
@@ -505,6 +517,10 @@ function setCartItem(item, value) {
 
 // --- Detailed Ledger Display ---
 function showLedgerOverlay() {
+  if (!gameState || !gameState.history || gameState.history.length === 0) {
+    alert('No monthly reports available yet. Lock in your first month to start!');
+    return;
+  }
   const roundResults = gameState.history[gameState.history.length - 1];
   if (!roundResults) return;
 
@@ -682,8 +698,10 @@ document.querySelectorAll('.btn-minus, .btn-plus').forEach(btn => {
       const item = targetId.split('-')[1];
       adjustCart(item, change);
     } else if (targetId === 'prepare-jugs') {
-      prepareJugs = Math.max(0, prepareJugs + change);
+      prepareJugs = Math.max(0, Math.min(30, prepareJugs + change));
       inputPrepareJugs.value = prepareJugs;
+      const prepareJugsVal = document.getElementById('prepare-jugs-val');
+      if (prepareJugsVal) prepareJugsVal.innerText = prepareJugs;
       updateStandCalculations();
     }
   });
@@ -706,10 +724,11 @@ document.querySelectorAll('.btn-minus, .btn-plus').forEach(btn => {
 
 // Direct typing input binding for jugs preparation
 if (inputPrepareJugs) {
+  const prepareJugsVal = document.getElementById('prepare-jugs-val');
   inputPrepareJugs.addEventListener('input', () => {
     const val = parseInt(inputPrepareJugs.value) || 0;
-    prepareJugs = Math.max(0, val);
-    inputPrepareJugs.value = prepareJugs;
+    prepareJugs = Math.max(0, Math.min(30, val));
+    if (prepareJugsVal) prepareJugsVal.innerText = prepareJugs;
     updateStandCalculations();
   });
   inputPrepareJugs.addEventListener('blur', () => {
@@ -799,3 +818,27 @@ btnPlayAgain.addEventListener('click', () => {
 // Initial load check
 switchScreen(screenLobby);
 updateRecipeQuality();
+
+// Sidebar tabs navigation
+document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(nav => nav.classList.remove('active'));
+    item.classList.add('active');
+    
+    const targetId = item.getAttribute('data-target');
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (targetId === 'screen-gameplay') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+});
+
+// Monthly report shortcut button
+const btnLedgerOpenShortcut = document.getElementById('btn-ledger-open-shortcut');
+if (btnLedgerOpenShortcut) {
+  btnLedgerOpenShortcut.addEventListener('click', () => {
+    showLedgerOverlay();
+  });
+}

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Lemonade Stand Tycoon - A competitive turn-based business simulation game.">
-  <title>Lemonade Stand Tycoon</title>
+  <meta name="description" content="Lemonade Tycoon - A competitive business simulation game.">
+  <title>Lemonade Tycoon</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,348 +17,393 @@
   <!-- App Main Content Container -->
   <main class="main-container">
 
-    <!-- HEADER BLOCK: TITLE CARD -->
-    <header class="title-card">
-      <div class="title-left">
-        <span class="sub-badge">SINGLEPLAYER / MULTIPLAYER PROTOTYPE</span>
-        <h1 class="main-title">LEMONADE STAND TYCOON</h1>
-        <p class="main-subtitle">Survive 12 months of rent, weather swings, price wars, and spoiled inventory. Build the best stand without going broke.</p>
+    <!-- LEFT COLUMN: SIDEBAR CARD -->
+    <aside class="sidebar-card">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">Stand Ledger</h2>
+        <span id="lobby-active-status" class="sidebar-status">Active: Lobby</span>
       </div>
-      <div class="title-right">
-        <button id="btn-restart-lobby" class="btn btn-new-game" onclick="window.location.reload();">New Game</button>
-      </div>
-    </header>
 
-    <!-- SECTION 1: LOBBY SCREEN -->
-    <section id="screen-lobby" class="screen active">
-      <div class="card lobby-card">
-        <h2 class="card-title">Setup Your Juice Stand</h2>
-        <p class="card-intro">Enter your name and choose whether to compete online with friends or locally against custom AI personalities.</p>
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-target="screen-gameplay">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </button>
+        <button class="nav-item" data-target="card-inventory">
+          <span class="nav-icon">📦</span>
+          Inventory
+        </button>
+        <button class="nav-item" data-target="card-market">
+          <span class="nav-icon">🏪</span>
+          Market
+        </button>
+        <button class="nav-item" data-target="card-leaderboards">
+          <span class="nav-icon">🏆</span>
+          Leaderboard
+        </button>
+      </nav>
 
-        <!-- Setup Form -->
-        <div id="lobby-setup-form" class="lobby-form">
-          <div class="form-group">
-            <label for="username-input">Business Owner Name</label>
-            <input type="text" id="username-input" placeholder="e.g. Lemon King" maxlength="15" autocomplete="off">
-          </div>
-          
-          <div class="lobby-actions">
-            <button id="btn-create-room" class="btn btn-primary">Create Room</button>
-            
-            <div class="join-divider">
-              <span>OR</span>
-            </div>
-            
-            <div class="join-group">
-              <input type="text" id="room-code-input" placeholder="CODE" maxlength="4" autocomplete="off">
-              <button id="btn-join-room" class="btn btn-secondary">Join Room</button>
-            </div>
-          </div>
-        </div>
+      <!-- Monthly Report button -->
+      <button id="btn-ledger-open-shortcut" class="btn btn-monthly-report">Monthly Report</button>
+    </aside>
 
-        <!-- Lobby Room Panel (Initially Hidden) -->
-        <div id="lobby-room-panel" class="room-panel hidden">
-          <div class="room-info">
-            <div class="code-container">
-              <span class="code-label">LOBBY ROOM CODE</span>
-              <h3 id="room-code-display">XXXX</h3>
-            </div>
-            <p class="room-helper">Share this code with friends to join your game session!</p>
-          </div>
-
-          <div class="lobby-players-section">
-            <h4>Joined Stand Owners (<span id="player-count">0</span>/6)</h4>
-            <div id="lobby-players-list" class="players-grid">
-              <!-- Dynamically populated players -->
-            </div>
-          </div>
-
-          <div class="lobby-controls">
-            <div class="bot-controls">
-              <span>Add Competitors:</span>
-              <button id="btn-add-bot" class="btn btn-small btn-secondary">+ Add Bot AI</button>
-            </div>
-            <button id="btn-start-game" class="btn btn-success btn-glow">Start Game</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: GAMEPLAY DASHBOARD -->
-    <section id="screen-gameplay" class="screen">
+    <!-- RIGHT COLUMN: MAIN CONTENT AREA -->
+    <section class="main-content">
       
-      <!-- Stand Ledger Card (Dashboard Bar) -->
-      <div class="card ledger-dashboard-card">
-        <div class="ledger-dash-header">
-          <h3 class="dash-title">Stand Ledger</h3>
-          <span id="display-month" class="ledger-month-badge">Month 1 of 12</span>
+      <!-- Top Title Bar -->
+      <header class="title-bar">
+        <div class="title-bar-left">
+          <h1 class="app-logo">LEMONADE TYCOON</h1>
+          <p class="app-tagline">Survive 12 months of weather swings, rent, and price competition.</p>
         </div>
+        <div class="title-bar-right">
+          <!-- Connection Status -->
+          <div id="connection-status" class="connection-status online">
+            <span class="status-dot"></span>
+            <span class="status-text">Connected</span>
+          </div>
+          <!-- New Game / Restart Button -->
+          <button id="btn-restart-lobby" class="btn btn-new-game" onclick="window.location.reload();">New Game</button>
+        </div>
+      </header>
 
-        <div class="ledger-metrics-grid">
-          <!-- Cash Metric -->
-          <div class="ledger-metric">
-            <span class="metric-label">Cash</span>
-            <span id="display-cash" class="metric-value">$150.00</span>
+      <!-- LOBBY SCREEN (Initially Active inside main content area) -->
+      <div id="screen-lobby" class="screen active">
+        <div class="card lobby-setup-card">
+          <h2 class="card-title">Setup Your Stand</h2>
+          <p class="card-intro">Enter your tycoon name and join or create a competitive room.</p>
+
+          <div id="lobby-setup-form" class="lobby-form">
+            <div class="form-group-clean">
+              <label for="username-input">Tycoon Owner Name</label>
+              <input type="text" id="username-input" placeholder="e.g. S.G" maxlength="15" autocomplete="off">
+            </div>
+            
+            <div class="lobby-actions">
+              <button id="btn-create-room" class="btn btn-lock-in">Create Room</button>
+              <div class="join-divider">
+                <span>OR</span>
+              </div>
+              <div class="join-group">
+                <input type="text" id="room-code-input" placeholder="CODE" maxlength="4" autocomplete="off">
+                <button id="btn-join-room" class="btn btn-secondary">Join Room</button>
+              </div>
+            </div>
           </div>
 
-          <!-- Rent Due Metric -->
-          <div class="ledger-metric">
-            <span class="metric-label">Rent Due</span>
-            <span id="display-rent-due" class="metric-value">$25.00</span>
-          </div>
+          <!-- Lobby Room Panel (Hidden till room created/joined) -->
+          <div id="lobby-room-panel" class="room-panel hidden">
+            <div class="room-info-block">
+              <div class="code-box">
+                <span class="code-label">LOBBY CODE</span>
+                <h3 id="room-code-display">XXXX</h3>
+              </div>
+              <p class="code-helper">Give this code to friends so they can join your tycoon room.</p>
+            </div>
 
-          <!-- Weather Metric -->
-          <div class="ledger-metric">
-            <span class="metric-label">Weather</span>
-            <span id="display-weather" class="metric-value">Sunny</span>
-          </div>
+            <div class="joined-players-section">
+              <h4>Joined Tycoons (<span id="player-count">0</span>/6)</h4>
+              <div id="lobby-players-list" class="players-grid">
+                <!-- Dynamically populated chips -->
+              </div>
+            </div>
 
-          <!-- Event Metric -->
-          <div class="ledger-metric" id="event-card">
-            <span class="metric-label">Event</span>
-            <span id="display-event-badge" class="metric-value event-name">Normal Month</span>
-            <small id="display-event-desc" class="event-desc-sub">Business as usual.</small>
+            <div class="lobby-controls">
+              <div class="bot-options">
+                <span>Add Bots:</span>
+                <button id="btn-add-bot" class="btn btn-secondary btn-small">+ Add Bot</button>
+              </div>
+              <button id="btn-start-game" class="btn btn-lock-in">Start Game</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Game Grid -->
-      <div class="game-grid">
+      <!-- GAMEPLAY SCREEN -->
+      <div id="screen-gameplay" class="screen">
         
-        <!-- Left Column: Ingredients & Shopping -->
-        <div class="game-col-main">
-          
-          <!-- Phase 1: Market Prices -->
-          <div class="card op-card" id="card-market">
-            <div class="card-header-clean">
-              <div>
-                <h3>Market Prices</h3>
-                <p class="subtitle-text">Buy ingredients before the month starts</p>
-              </div>
-            </div>
-            
-            <div class="market-list">
-              <!-- Lemons Row -->
-              <div class="market-list-row">
-                <div class="row-left">
-                  <span class="row-emoji">🍋</span>
-                  <div>
-                    <span class="row-title">Lemons</span>
-                    <span class="row-perish-info">Rots in 3 months</span>
-                  </div>
-                </div>
-                <div class="row-right">
-                  <span id="price-lemon" class="row-price">$0.00</span>
-                  <div class="counter-control">
-                    <button class="btn-counter btn-minus" data-target="buy-lemons">-</button>
-                    <input type="number" id="buy-lemons" value="0" min="0" max="99">
-                    <button class="btn-counter btn-plus" data-target="buy-lemons">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sugar Row -->
-              <div class="market-list-row">
-                <div class="row-left">
-                  <span class="row-emoji">🍬</span>
-                  <div>
-                    <span class="row-title">Sugar Cups</span>
-                    <span class="row-perish-info">Lasts forever</span>
-                  </div>
-                </div>
-                <div class="row-right">
-                  <span id="price-sugar" class="row-price">$0.00</span>
-                  <div class="counter-control">
-                    <button class="btn-counter btn-minus" data-target="buy-sugar">-</button>
-                    <input type="number" id="buy-sugar" value="0" min="0" max="99">
-                    <button class="btn-counter btn-plus" data-target="buy-sugar">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ice Row -->
-              <div class="market-list-row">
-                <div class="row-left">
-                  <span class="row-emoji">❄️</span>
-                  <div>
-                    <span class="row-title">Ice Bags</span>
-                    <span class="row-perish-info">Melts at end of month</span>
-                  </div>
-                </div>
-                <div class="row-right">
-                  <span id="price-ice" class="row-price">$0.00</span>
-                  <div class="counter-control">
-                    <button class="btn-counter btn-minus" data-target="buy-ice">-</button>
-                    <input type="number" id="buy-ice" value="0" min="0" max="99">
-                    <button class="btn-counter btn-plus" data-target="buy-ice">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Cups Row -->
-              <div class="market-list-row">
-                <div class="row-left">
-                  <span class="row-emoji">🥤</span>
-                  <div>
-                    <span class="row-title">Cups</span>
-                    <span class="row-perish-info">Lasts forever</span>
-                  </div>
-                </div>
-                <div class="row-right">
-                  <span id="price-cups" class="row-price">$0.05</span>
-                  <div class="counter-control">
-                    <button class="btn-counter btn-minus" data-target="buy-cups">-</button>
-                    <input type="number" id="buy-cups" value="0" min="0" max="99">
-                    <button class="btn-counter btn-plus" data-target="buy-cups">+</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="market-total-bar">
-              <span>Shopping Cart Total:</span>
-              <strong id="shopping-total">$0.00</strong>
+        <!-- Dashboard Ledger Cards -->
+        <div class="ledger-cards-container">
+          <!-- Card 1: Available Cash -->
+          <div class="ledger-dash-card">
+            <span class="dash-icon">💵</span>
+            <div class="dash-details">
+              <span class="dash-label">Available Cash</span>
+              <strong id="display-cash" class="dash-value">$150.00</strong>
             </div>
           </div>
 
-          <!-- Stand Inventory Info -->
-          <div class="card op-card">
-            <div class="card-header-clean">
-              <h3>Available Stock Inventory</h3>
-            </div>
-            
-            <div class="inventory-bubbles-grid">
-              <div class="inv-bubble">
-                <span class="bubble-emoji">🍋</span>
-                <div class="bubble-desc">
-                  <span class="bubble-label">Lemons</span>
-                  <strong id="inv-lemons-total">0</strong>
-                </div>
-                <small class="bubble-subinfo" id="inv-lemons-breakdown">(Fresh: 0 | 1m: 0 | 2m: 0)</small>
-              </div>
-
-              <div class="inv-bubble">
-                <span class="bubble-emoji">🍬</span>
-                <div class="bubble-desc">
-                  <span class="bubble-label">Sugar</span>
-                  <strong id="inv-sugar">0 cups</strong>
-                </div>
-              </div>
-
-              <div class="inv-bubble">
-                <span class="bubble-emoji">❄️</span>
-                <div class="bubble-desc">
-                  <span class="bubble-label">Ice</span>
-                  <strong id="inv-ice">0 bags</strong>
-                </div>
-              </div>
-
-              <div class="inv-bubble">
-                <span class="bubble-emoji">🥤</span>
-                <div class="bubble-desc">
-                  <span class="bubble-label">Cups</span>
-                  <strong id="inv-cups">0</strong>
-                </div>
-              </div>
+          <!-- Card 2: Rent Due -->
+          <div class="ledger-dash-card">
+            <span class="dash-icon">📅</span>
+            <div class="dash-details">
+              <span class="dash-label">Rent Due</span>
+              <strong id="display-rent-due" class="dash-value">$25.00</strong>
             </div>
           </div>
 
+          <!-- Card 3: Weather -->
+          <div class="ledger-dash-card">
+            <span class="dash-icon">☀️</span>
+            <div class="dash-details">
+              <span class="dash-label">Weather</span>
+              <strong id="display-weather" class="dash-value">Sunny</strong>
+            </div>
+          </div>
+
+          <!-- Card 4: Event -->
+          <div class="ledger-dash-card" id="event-card">
+            <span class="dash-icon">📢</span>
+            <div class="dash-details">
+              <span class="dash-label">Event</span>
+              <strong id="display-event-badge" class="dash-value event-title">Normal Month</strong>
+              <span id="display-event-desc" class="dash-subtext">Business as usual.</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Right Column: recipe, Pricing, Stand Setup -->
-        <div class="game-col-sidebar">
+        <!-- Main Gameplay Layout Grid -->
+        <div class="gameplay-grid">
           
-          <!-- recipe and Price Card -->
-          <div class="card op-card" id="card-recipe-pricing">
-            <div class="card-header-clean">
-              <div>
-                <h3>Recipe and Price</h3>
-                <p class="subtitle-text">Balance taste against margin</p>
+          <!-- Column 1 (Left): Market Prices & Stock levels -->
+          <div class="gameplay-col-left">
+            
+            <!-- Market Prices Card -->
+            <div class="card op-card" id="card-market">
+              <div class="card-header-clean">
+                <div>
+                  <h3>Market Prices</h3>
+                  <p class="subtitle-text">Prices vary by weather</p>
+                </div>
+              </div>
+
+              <div class="market-list">
+                <!-- Lemons Row -->
+                <div class="market-list-row">
+                  <div class="row-left">
+                    <span class="item-circle lemons-badge">🍋</span>
+                    <div class="item-details">
+                      <span class="row-title">Lemons</span>
+                      <span id="price-lemon" class="row-subinfo">$0.15/unit</span>
+                    </div>
+                  </div>
+                  <div class="row-right">
+                    <div class="counter-control">
+                      <button class="btn-counter btn-minus" data-target="buy-lemons">-</button>
+                      <input type="number" id="buy-lemons" value="0" min="0" max="99">
+                      <button class="btn-counter btn-plus" data-target="buy-lemons">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sugar Row -->
+                <div class="market-list-row">
+                  <div class="row-left">
+                    <span class="item-circle sugar-badge">🍬</span>
+                    <div class="item-details">
+                      <span class="row-title">Sugar</span>
+                      <span id="price-sugar" class="row-subinfo">$0.05/cup</span>
+                    </div>
+                  </div>
+                  <div class="row-right">
+                    <div class="counter-control">
+                      <button class="btn-counter btn-minus" data-target="buy-sugar">-</button>
+                      <input type="number" id="buy-sugar" value="0" min="0" max="99">
+                      <button class="btn-counter btn-plus" data-target="buy-sugar">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ice Row -->
+                <div class="market-list-row">
+                  <div class="row-left">
+                    <span class="item-circle ice-badge">❄️</span>
+                    <div class="item-details">
+                      <span class="row-title">Ice</span>
+                      <span id="price-ice" class="row-subinfo">$0.02/cube</span>
+                    </div>
+                  </div>
+                  <div class="row-right">
+                    <div class="counter-control">
+                      <button class="btn-counter btn-minus" data-target="buy-ice">-</button>
+                      <input type="number" id="buy-ice" value="0" min="0" max="99">
+                      <button class="btn-counter btn-plus" data-target="buy-ice">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cups Row -->
+                <div class="market-list-row">
+                  <div class="row-left">
+                    <span class="item-circle cups-badge">🥤</span>
+                    <div class="item-details">
+                      <span class="row-title">Cups</span>
+                      <span id="price-cups" class="row-subinfo">$0.04/cup</span>
+                    </div>
+                  </div>
+                  <div class="row-right">
+                    <div class="counter-control">
+                      <button class="btn-counter btn-minus" data-target="buy-cups">-</button>
+                      <input type="number" id="buy-cups" value="0" min="0" max="99">
+                      <button class="btn-counter btn-plus" data-target="buy-cups">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="shopping-total-row">
+                <span>Shopping Cart Total:</span>
+                <strong id="shopping-total">$0.00</strong>
               </div>
             </div>
 
-            <div class="setup-controls-stack">
-              <!-- Sliders & Inputs row -->
-              <div class="recipe-inputs-grid">
-                <!-- Lemons -->
-                <div class="recipe-input-box">
-                  <label for="recipe-lemons">Lemons per Jug</label>
-                  <input type="number" id="recipe-lemons" min="1" max="10" value="4">
-                </div>
-
-                <!-- Sugar -->
-                <div class="recipe-input-box">
-                  <label for="recipe-sugar">Sugar per Jug</label>
-                  <input type="number" id="recipe-sugar" min="1" max="10" value="4">
-                </div>
-
-                <!-- Ice -->
-                <div class="recipe-input-box">
-                  <label for="recipe-ice">Ice per Jug</label>
-                  <input type="number" id="recipe-ice" min="1" max="10" value="4">
-                </div>
+            <!-- Available Stock Card -->
+            <div class="card op-card" id="card-inventory">
+              <div class="card-header-clean">
+                <h3>Available Stock</h3>
               </div>
 
-              <!-- Price & Quantity Inputs -->
-              <div class="execution-inputs-grid">
-                <div class="form-group-clean">
-                  <label for="price-per-cup">Price per Cup ($)</label>
-                  <input type="number" id="price-per-cup" value="1.50" min="0.10" max="10.00" step="0.01">
+              <div class="stock-grid">
+                <!-- Lemons -->
+                <div class="stock-box">
+                  <span id="inv-lemons-total" class="stock-val">0</span>
+                  <span class="stock-label">Lemons Left</span>
+                  <small id="inv-lemons-breakdown" class="stock-breakdown">(Fresh: 0 | 1m: 0)</small>
+                </div>
+                <!-- Cups -->
+                <div class="stock-box">
+                  <span id="inv-cups" class="stock-val">0</span>
+                  <span class="stock-label">Cups Left</span>
+                </div>
+                <!-- Sugar -->
+                <div class="stock-box">
+                  <span id="inv-sugar" class="stock-val">0 cups</span>
+                  <span class="stock-label">Sugar</span>
+                </div>
+                <!-- Ice Bags -->
+                <div class="stock-box">
+                  <span id="inv-ice" class="stock-val">0 bags</span>
+                  <span class="stock-label">Ice Bags</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 2 (Right): recipe, Pricing & Standings -->
+          <div class="gameplay-col-right">
+            
+            <!-- Recipe & Pricing Card -->
+            <div class="card op-card" id="card-recipe-pricing">
+              <div class="card-header-clean">
+                <div>
+                  <h3>Recipe &amp; Pricing</h3>
+                  <p class="subtitle-text">Perfect your mix for the local crowd.</p>
+                </div>
+                <span id="display-month-badge" class="month-pill">Month 1 of 12</span>
+              </div>
+
+              <div class="recipe-pricing-form">
+                <!-- 2x2 Parameters Grid -->
+                <div class="params-inputs-grid">
+                  <!-- Lemons per Jug -->
+                  <div class="param-input-box">
+                    <label for="recipe-lemons">🍋 Lemons per Jug</label>
+                    <input type="number" id="recipe-lemons" min="1" max="10" value="4">
+                  </div>
+                  <!-- Sugar per Jug -->
+                  <div class="param-input-box">
+                    <label for="recipe-sugar">🍬 Sugar per Jug</label>
+                    <input type="number" id="recipe-sugar" min="1" max="10" value="4">
+                  </div>
+                  <!-- Ice per Jug -->
+                  <div class="param-input-box">
+                    <label for="recipe-ice">❄️ Ice per Jug</label>
+                    <input type="number" id="recipe-ice" min="1" max="10" value="4">
+                  </div>
+                  <!-- Price per Cup -->
+                  <div class="param-input-box">
+                    <label for="price-per-cup">🏷️ Price per Cup</label>
+                    <div class="price-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="price-per-cup" value="1.50" min="0.10" max="10.00" step="0.01">
+                    </div>
+                  </div>
                 </div>
 
-                <div class="form-group-clean">
-                  <label for="prepare-jugs">Jugs to Prepare</label>
-                  <div class="counter-control full-width">
+                <!-- Jugs Slider -->
+                <div class="jugs-slider-container">
+                  <div class="slider-label-row">
+                    <span>Jugs to Prepare for Today</span>
+                    <strong id="prepare-jugs-val" class="slider-val-badge">0</strong>
+                  </div>
+                  <div class="slider-control-row">
                     <button class="btn-counter btn-minus" data-target="prepare-jugs">-</button>
-                    <input type="number" id="prepare-jugs" value="0" min="0" max="99">
+                    <input type="range" id="prepare-jugs" min="0" max="30" value="0" class="jugs-slider">
                     <button class="btn-counter btn-plus" data-target="prepare-jugs">+</button>
                   </div>
                 </div>
-              </div>
 
-              <!-- recipe Quality slider -->
-              <div class="quality-score-section">
-                <div class="quality-labels-row">
-                  <span>Recipe Quality</span>
-                  <span class="quality-text-badge"><strong id="quality-desc">Balanced</strong> (<span id="quality-score">100</span>)</span>
+                <!-- Quality progress bar -->
+                <div class="quality-display-box">
+                  <div class="quality-label-row">
+                    <span>Recipe Quality</span>
+                    <strong id="quality-desc">Balanced</strong>
+                  </div>
+                  
+                  <div class="quality-range-bar">
+                    <div id="quality-progress-fill" class="quality-range-fill"></div>
+                    <div class="quality-markers">
+                      <span>WEAK</span>
+                      <span>SOUR</span>
+                      <span>PERFECT</span>
+                      <span>SWEET</span>
+                      <span>TART</span>
+                    </div>
+                  </div>
+                  <span id="quality-score-value" class="hidden"><span id="quality-score">100</span></span>
                 </div>
-                <div class="quality-progress-bar-container">
-                  <div id="quality-progress-fill" class="quality-progress-bar-fill" style="width: 100%;"></div>
+
+                <!-- Estimates & Alerts -->
+                <div class="estimate-messages">
+                  <p id="inventory-requirement-info" class="requirement-alert">Uses: 0 lemons, 0 sugar, 0 ice, 0 cups</p>
+                  <p id="financial-estimate-info" class="profit-estimate">Cost per Cup: $0.00 | Margin: 0%</p>
+                </div>
+
+                <!-- Submit Action button -->
+                <div class="submit-action-row">
+                  <button id="btn-submit-turn" class="btn btn-lock-in">Lock In Month</button>
+                  <div id="ready-waiting-indicator" class="waiting-indicator hidden">
+                    <div class="loader-spinner"></div>
+                    <span>Waiting for competitors...</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Standings & Competitors (Leaderboards) -->
+            <div class="card op-card" id="card-leaderboards">
+              <div class="leaderboard-columns">
+                <!-- Column 1: Leaderboard list -->
+                <div class="lead-col">
+                  <h4>Stand standings</h4>
+                  <div id="gameplay-leaderboard" class="leaderboard-list">
+                    <!-- Dynamically populated stands -->
+                  </div>
+                </div>
+
+                <!-- Column 2: Turn status checklist -->
+                <div class="lead-col">
+                  <h4>Competitor Status</h4>
+                  <div id="player-readiness-list" class="player-readiness-checklist">
+                    <!-- Dynamically populated checklist -->
+                  </div>
                 </div>
               </div>
-
-              <!-- Ingredient Check messages -->
-              <div class="alerts-container">
-                <p id="inventory-requirement-info" class="inventory-check-text">Uses: 0 lemons, 0 sugar, 0 ice, 0 cups</p>
-                <p id="financial-estimate-info" class="financial-estimate-text">Cost per Cup: $0.00 | Margin: 0%</p>
-              </div>
-
-              <!-- Action button -->
-              <div class="execution-actions">
-                <button id="btn-submit-turn" class="btn btn-lock-in">Lock In Month</button>
-                <div id="ready-waiting-indicator" class="waiting-indicator hidden">
-                  <div class="loader-spinner"></div>
-                  <span>Waiting for competitors...</span>
-                </div>
-              </div>
-
             </div>
-          </div>
 
-          <!-- Room Leaderboard -->
-          <div class="card sidebar-subcard">
-            <h4 class="subcard-title">Stand Standings</h4>
-            <div id="gameplay-leaderboard" class="leaderboard-list">
-              <!-- Dynamically populated leaderboard -->
-            </div>
-          </div>
-
-          <!-- Turn checklist -->
-          <div class="card sidebar-subcard">
-            <h4 class="subcard-title">Competitor Status</h4>
-            <div id="player-readiness-list" class="player-readiness-checklist">
-              <!-- Dynamically populated checklist -->
-            </div>
           </div>
 
         </div>
@@ -471,7 +516,7 @@
         <div class="gameover-header-card">
           <span class="trophy-badge">🏆</span>
           <h2>ANNUAL STANDINGS</h2>
-          <p>After 12 months of tycoon competition, the fiscal year has concluded!</p>
+          <p>After 12 months of competition, the fiscal year has concluded!</p>
         </div>
 
         <!-- Winner Podium / Banner -->
